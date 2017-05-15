@@ -48,8 +48,6 @@ function eraseCookie(name, pref) {
 function process_event_list(content)
 {
     if (this.responseText.match("Flotte ennemie")) {
-    //if (xhr.responseText.match("allianceAttack").length >0)
-    //	Attaque_groupee=true
 
     //events = xhr.responseText.split('eventFleet');
     events = this.responseText.split('<tr class="');
@@ -95,8 +93,7 @@ function check_attack() {
             }
         };
 
-        xhr.open("POST", "https://"+univers+"/game/index.php?page=eventList");
-        xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+        xhr.open("GET", "https://" + univers + "/game/index.php?page=eventList");
         xhr.send();
     }
 	setTimeout(check_attack, rand(4,6)*1000);
