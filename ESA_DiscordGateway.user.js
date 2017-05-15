@@ -96,14 +96,32 @@ function check_attack() {
         xhr.open("GET", "https://" + univers + "/game/index.php?page=eventList");
         xhr.send();
     }
-	setTimeout(check_attack, rand(4,6)*1000);
+	setTimeout(check_attack, rand(4, 6) * 1000);
 }
 
 function send_to_webhook(cp_attacked,coords,isOnLune,time_attack,time_arrival,planet_origin,coords_origin, total_fleets_origin,liste_fleets_origin) {
     createCookie('webhook_advert_'+cp_attacked, time(), 1, 'all');	
-	message="|_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_|\nAttaque en cours sur la "+((isOnLune)?"lune":"planete")+" "+cp_attacked+" "+coords+"\n\tNom du défenseur : "+username+"\n\tHeure d'impact : "+time_arrival+"\n\tInformation attaquant:\n\t\tAttaque depuis: "+planet_origin+" "+coords_origin+"\n\t\tNombres vaisseaux: "+total_fleets_origin+"\n\t\tListe vaisseaux: "+liste_fleets_origin+"\n|_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_|\n";
+	var message = "|_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_|\n";
+    message += "Attaque en cours sur la [target_type] [target_name] [target_coordinates]\n";
+    message += "\tNom du défenseur : [target_username]\n";
+    message += "\tHeure d'impact : [impact_date]\n";
+    message += "\tInformation attaquant:\n";
+    message += "\t\tAttaque depuis: [source_name] [source_coordinates]\n";
+    message += "\t\tNombres vaisseaux: [source_fleet]\n";
+    message += "\t\tListe vaisseaux: [source_fleet_details]\n";
+    message += "|_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_|\n";
+    
+    message = message.replace("[target_type]", isOnLune ? "lune" : "planete");
+    message = message.replace("[target_name]", cp_attacked);
+    message = message.replace("[target_coordinates]", coords);
+    message = message.replace("[target_username]", username);
+    message = message.replace("[impact_date]", time_arrival);
+    message = message.replace("[source_name]", planet_origin);
+    message = message.replace("[source_coordinates]", coords_origin);
+    message = message.replace("[source_fleet]", total_fleets_origin);
+    message = message.replace("[source_fleet_details]", liste_fleets_origin);
 
-	var params = JSON.stringify({ "username": "I2T", "content":message });
+	var params = JSON.stringify({ "username" : "I2T", "content" : message});
 
     var xhr = new XMLHttpRequest();
 	xhr.open("POST", URL_WEBHOOK + "?wait=1");
