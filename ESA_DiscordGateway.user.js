@@ -49,15 +49,15 @@ function check_attack() {
         var xhr = new XMLHttpRequest();
         xhr.onreadystatechange  = function()
         {
-            if(xhr.readyState  == 4)
+            if(this.readyState  == 4)
             {
-                if(xhr.status  == 200) {
-                    if (xhr.responseText.match("Flotte ennemie")) {
+                if(this.status  == 200) {
+                    if (this.responseText.match("Flotte ennemie")) {
 						//if (xhr.responseText.match("allianceAttack").length >0)
 						//	Attaque_groupee=true
 						
                         //events = xhr.responseText.split('eventFleet');
-						events = xhr.responseText.split('<tr class="');
+						events = this.responseText.split('<tr class="');
                         for (i=1 ; i<events.length ; i++) {
                             if (events[i].match('Flotte ennemie') && !events[i].match("https://gf3.geo.gfsrv.net/cdnb7/60a018ae3104b4c7e5af8b2bde5aee.gif") && !events[i].match("https://gf3.geo.gfsrv.net/cdne8/583cd7016e56770a23028cba6b5d2c.gif")) {
 								//Imp2Toulouse- Compatibility with antigame
