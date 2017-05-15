@@ -18,7 +18,7 @@
 var URL_WEBHOOK="";
 
 //Declarations
-var univers = window.location.href.split('/')[2];
+var univers = window.location.hostname;
 var username;
 var cur_planet;
 
