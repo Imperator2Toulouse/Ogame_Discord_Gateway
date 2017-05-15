@@ -44,6 +44,7 @@ function eraseCookie(name, pref) {
     else name = cur_planet+'_'+pref+'_'+name;
     localStorage.removeItem(name);
 }
+
 function check_attack() {
 	if ($("div#attack_alert").length > 0){
         var xhr = new XMLHttpRequest();
@@ -88,7 +89,7 @@ function check_attack() {
             }
         };
 
-        xhr.open("POST", "https://"+univers+"/game/index.php?page=eventList",  true);
+        xhr.open("POST", "https://"+univers+"/game/index.php?page=eventList");
         xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
         xhr.send();
     }
@@ -102,7 +103,7 @@ function send_to_webhook(cp_attacked,coords,isOnLune,time_attack,time_arrival,pl
 	var params = JSON.stringify({ "username": "I2T", "content":message });
 
     var xhr = new XMLHttpRequest();
-	xhr.open("POST", URL_WEBHOOK+																																																																																																																																																																																																																																																																																																																																													"?wait=1",  true);
+	xhr.open("POST", URL_WEBHOOK + "?wait=1");
     xhr.setRequestHeader("Content-type", "application/json; charset=utf-8");
     xhr.send(params);
 }
