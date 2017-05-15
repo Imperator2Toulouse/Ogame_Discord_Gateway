@@ -1,3 +1,4 @@
+/*
 // ==UserScript==
 // @name        Discord Gateway
 // @namespace   Discord_Gateway
@@ -12,17 +13,17 @@
 // @copyright   2017+, You
 // @require     http://code.jquery.com/jquery-1.9.1.min.js
 // ==/UserScript==
+*/
 
-
-//Configuration
+/* Configuration */
 var URL_WEBHOOK="";
 
-//Declarations
+/* Declarations */
 var univers = window.location.hostname;
 var username;
 var cur_planet;
 
-//Fonctions
+/* Fonctions */
 function rand(a,b) { return Math.floor((Math.random()*(b-a))+a);}
 
 function time() {mytime=new Date();return mytime.getTime();}
@@ -77,7 +78,7 @@ function process_event_list(content)
         event.source_type = figure_origin_fleet_tag.classList.item(1);
         event.source_coordinates = coords_origin_tag.textContent;
         event.fleet_size = details_fleet_tag.textContent;
-        event.fleet_details = ""; // TODO : parse and beautify fleet details
+        event.fleet_details = ""; /* TODO : parse and beautify fleet details */
         event.target_name = dest_fleet_tag.textContent;
         event.target_type = figure_dest_fleet_tag.classList.item(1);
         event.target_coordinates = dest_coords_tag.textContent;
@@ -140,9 +141,9 @@ function send_to_webhook(event) {
     xhr.send(params);
 }
 
-//get username
+/* get username */
 username=($('span.textBeefy a.overlay.textBeefy').length > 0)?$('span.textBeefy a.overlay.textBeefy').html().replace(/ /g,'').replace("\n",''):"unloged";
 cur_planet=$("#selectedPlanetName").html().trim();
 
-//Launch
+/* Launch */
 setTimeout(check_attack, 2000);
