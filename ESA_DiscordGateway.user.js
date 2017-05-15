@@ -72,17 +72,16 @@ function process_event_list(content)
 
         var event = {};
         event.id = event_fleet_tag.id.split("-")[1];
-        event.time = arrival_time_tag.textContent;
+        event.time = arrival_time_tag.textContent.trim();
         event.type = img_mission_fleet_tag.getAttribute("title");
-        event.source_name = origin_fleet_tag.textContent;
+        event.source_name = origin_fleet_tag.textContent.trim();
         event.source_type = figure_origin_fleet_tag.classList.item(1);
-        event.source_coordinates = coords_origin_tag.textContent;
-        event.fleet_size = details_fleet_tag.textContent;
+        event.source_coordinates = coords_origin_tag.textContent.trim();
+        event.fleet_size = details_fleet_tag.textContent.trim();
         event.fleet_details = ""; /* TODO : parse and beautify fleet details */
-        event.target_name = dest_fleet_tag.textContent;
+        event.target_name = dest_fleet_tag.textContent.trim();
         event.target_type = figure_dest_fleet_tag.classList.item(1);
-        event.target_coordinates = dest_coords_tag.textContent;
-
+        event.target_coordinates = dest_coords_tag.textContent.trim();
 
         if (event.type.split("|")[0] == "Flotte ennemie")
         {
