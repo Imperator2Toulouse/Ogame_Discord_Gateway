@@ -86,7 +86,7 @@ function check_attack() {
         var xhr = new XMLHttpRequest();
         xhr.onreadystatechange  = function()
         {
-            if(this.readyState == 4)
+            if(this.readyState == XMLHttpRequest.DONE)
             {
                 if(this.status  == 200)
                 {
