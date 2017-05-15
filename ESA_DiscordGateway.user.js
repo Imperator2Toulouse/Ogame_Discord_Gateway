@@ -22,18 +22,6 @@ var univers = window.location.hostname;
 var username;
 var cur_planet;
 
-var xhr;
-try {  xhr = new ActiveXObject('Msxml2.XMLHTTP');   }
-catch (e) 
-{
-    try {   xhr = new ActiveXObject('Microsoft.XMLHTTP'); }
-    catch (e2) 
-    {
-        try {  xhr = new XMLHttpRequest();  }
-        catch (e3) {  xhr = false;   }
-    }
-}
-
 //Fonctions
 function rand(a,b) { return Math.floor((Math.random()*(b-a))+a);}
 
@@ -58,6 +46,7 @@ function eraseCookie(name, pref) {
 }
 function check_attack() {
 	if ($("div#attack_alert").length > 0){
+        var xhr = new XMLHttpRequest();
         xhr.onreadystatechange  = function()
         {
             if(xhr.readyState  == 4)
@@ -112,6 +101,7 @@ function send_to_webhook(cp_attacked,coords,isOnLune,time_attack,time_arrival,pl
 
 	var params = JSON.stringify({ "username": "I2T", "content":message });
 
+    var xhr = new XMLHttpRequest();
 	xhr.open("POST", URL_WEBHOOK+																																																																																																																																																																																																																																																																																																																																													"?wait=1",  true);
     xhr.setRequestHeader("Content-type", "application/json; charset=utf-8");
     xhr.send(params);
