@@ -47,35 +47,46 @@ function eraseCookie(name, pref) {
 
 function process_event_list(content)
 {
-    if (this.responseText.match("Flotte ennemie")) {
+    var p = new DOMParser();
+    var doc = p.parseFromString(content, "text/html");
 
-    //events = xhr.responseText.split('eventFleet');
-    events = this.responseText.split('<tr class="');
-    for (i=1 ; i<events.length ; i++) {
-        if (events[i].match('Flotte ennemie') && !events[i].match("https://gf3.geo.gfsrv.net/cdnb7/60a018ae3104b4c7e5af8b2bde5aee.gif") && !events[i].match("https://gf3.geo.gfsrv.net/cdne8/583cd7016e56770a23028cba6b5d2c.gif")) {
-            //Imp2Toulouse- Compatibility with antigame
-            isOnLune=events[i].split(/<td class="destFleet">/)[1].split(/<\/td>/)[0].match("moon");
+    var event_fleet_tags = doc.getElementsByClassName("eventFleet");
 
-            coords = '['+events[i].split('destCoords')[1].split('[')[1].split(']')[0]+']';
-            if (isOnLune) coords += 'Lune';
-            time_attack = parseInt(events[i].split('data-arrival-time="')[1].split('"')[0]) - Math.floor(time()/1000);
+    for (var i = 0; i < event_fleet_tags.length; ++i)
+    {
+        var event_fleet_tag = event_fleet_tags[i];
 
-            if (events[i].match('data-mission-type="1"'))
-                time_arrival= events[i].split('arrivalTime">')[1].split('</td>')[0].trim();
-            else
-                time_arrival= events[i].match('data-arrival-time="(.*)"')[1].trim();
-            
-            cp_attacked = events[i].split('destFleet')[1].split('figure>')[1].split('</td>')[0].trim();
-            planet_origin = events[i].split('originFleet">')[1].split('</td>')[0].split('</figure>')[1].trim();
-            coords_origin = '['+events[i].split('coordsOrigin')[1].split('[')[1].split(']')[0]+']';
-            total_fleets_origin = events[i].split('detailsFleet">')[1].split('<span>')[1].split('</span>')[0].trim();
-            liste_fleets_origin = events[i].split('icon_movement">')[1].split('Vaisseaux:')[1].split('&lt;/table&gt;')[0].replace(/(<(?:.|\n)*?>)/gm, ' ').replace(/(&lt;(?:.|\n)*?&gt;)/gm, ' ').replace(/\s+/gm, ' ');
-            attaker_playerid=parseInt(events[i].match(/data-playerId="(\d+)"/)[1]);
-            
-            if (readCookie('webhook_advert_'+cp_attacked,'all') == null)
-                setTimeout(send_to_webhook(cp_attacked,coords,isOnLune,time_attack,time_arrival,planet_origin,coords_origin, total_fleets_origin, liste_fleets_origin),2000);
+        var mission_fleet_tag = event_fleet_tag.getElementsByClassName("missionFleet")[0];
+        var arrival_time_tag = event_fleet_tag.getElementsByClassName("arrivalTime")[0];
+        var origin_fleet_tag = event_fleet_tag.getElementsByClassName("originFleet")[0];
+        var coords_origin_tag = event_fleet_tag.getElementsByClassName("coordsOrigin")[0];
+        var details_fleet_tag = event_fleet_tag.getElementsByClassName("detailsFleet")[0];
+        var icon_movement_tag = event_fleet_tag.getElementsByClassName("icon_movement")[0];
+        var dest_fleet_tag = event_fleet_tag.getElementsByClassName("destFleet")[0];
+        var dest_coords_tag = event_fleet_tag.getElementsByClassName("destCoords")[0];
+        
+        var img_mission_fleet_tag = mission_fleet_tag.getElementsByTagName("img")[0];
+        var figure_origin_fleet_tag = origin_fleet_tag.getElementsByTagName("figure")[0];
+        var figure_dest_fleet_tag = dest_fleet_tag.getElementsByTagName("figure")[0];
+
+        var event = {};
+        event.id = event_fleet_tag.id.split("-")[1];
+        event.time = arrival_time_tag.textContent;
+        event.type = img_mission_fleet_tag.getAttribute("title");
+        event.source_name = origin_fleet_tag.textContent;
+        event.source_type = figure_origin_fleet_tag.classList.item(1);
+        event.source_coordinates = coords_origin_tag.textContent;
+        event.fleet_size = details_fleet_tag.textContent;
+        event.fleet_details = ""; // TODO : parse and beautify fleet details
+        event.target_name = dest_fleet_tag.textContent;
+        event.target_type = figure_dest_fleet_tag.classList.item(1);
+        event.target_coordinates = dest_coords_tag.textContent;
+
+
+        if (event.type.split("|")[0] == "Flotte ennemie")
+        {
+            send_to_webhook(event);
         }
-    }
     }
 }
 
@@ -99,8 +110,8 @@ function check_attack() {
 	setTimeout(check_attack, rand(4, 6) * 1000);
 }
 
-function send_to_webhook(cp_attacked,coords,isOnLune,time_attack,time_arrival,planet_origin,coords_origin, total_fleets_origin,liste_fleets_origin) {
-    createCookie('webhook_advert_'+cp_attacked, time(), 1, 'all');	
+function send_to_webhook(event) {
+    createCookie('webhook_advert_' + event.id, time(), 1, 'all');	
 	var message = "|_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_|\n";
     message += "Attaque en cours sur la [target_type] [target_name] [target_coordinates]\n";
     message += "\tNom du défenseur : [target_username]\n";
@@ -111,15 +122,15 @@ function send_to_webhook(cp_attacked,coords,isOnLune,time_attack,time_arrival,pl
     message += "\t\tListe vaisseaux: [source_fleet_details]\n";
     message += "|_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_|\n";
     
-    message = message.replace("[target_type]", isOnLune ? "lune" : "planete");
-    message = message.replace("[target_name]", cp_attacked);
-    message = message.replace("[target_coordinates]", coords);
+    message = message.replace("[target_type]", event.target_type);
+    message = message.replace("[target_name]", event.target_name);
+    message = message.replace("[target_coordinates]", event.target_coordinates);
     message = message.replace("[target_username]", username);
-    message = message.replace("[impact_date]", time_arrival);
-    message = message.replace("[source_name]", planet_origin);
-    message = message.replace("[source_coordinates]", coords_origin);
-    message = message.replace("[source_fleet]", total_fleets_origin);
-    message = message.replace("[source_fleet_details]", liste_fleets_origin);
+    message = message.replace("[impact_date]", event.time);
+    message = message.replace("[source_name]", event.source_name);
+    message = message.replace("[source_coordinates]", event.source_coordinates);
+    message = message.replace("[source_fleet]", event.fleet_size);
+    message = message.replace("[source_fleet_details]", event.fleet_details);
 
 	var params = JSON.stringify({ "username" : "I2T", "content" : message});
 
