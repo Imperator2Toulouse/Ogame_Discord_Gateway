@@ -288,7 +288,7 @@ function send_to_webhook(fleet_movement) {
     
     var fleet_prototype = "\t\tAttaquant : [source_name] de [source_coordinates] ([source_type])\n";
     fleet_prototype += "\t\t\tVaisseaux ([size]) :\n";
-    fleet_prototype += "[details]\n";
+    fleet_prototype += "\t\t\t[details]\n";
 
     var fleets = "";
     for (var i = 0; i < fleet_movement.fleets.length; ++i)
