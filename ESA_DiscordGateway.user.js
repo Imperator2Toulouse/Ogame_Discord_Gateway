@@ -213,14 +213,8 @@ function merge_fleets_with_fleet_movements(fleet_movements, fleets)
     }
 }
 
-function process_event_list(content)
+function get_movement_tags(event_fleet_tags, alliance_attack_tags)
 {
-    var p = new DOMParser();
-    var doc = p.parseFromString(content, "text/html");
-
-    var event_fleet_tags = doc.getElementsByClassName("eventFleet");
-    var alliance_attack_tags = doc.getElementsByClassName("allianceAttack");
-
     var movement_tags = [];
 
     for (var i = 0; i < event_fleet_tags.length; ++i)
@@ -233,6 +227,19 @@ function process_event_list(content)
         movement_tags.push(alliance_attack_tags[i]);
     }
 
+    return movement_tags;
+}
+
+function process_event_list(content)
+{
+    var p = new DOMParser();
+    var doc = p.parseFromString(content, "text/html");
+
+    var event_fleet_tags = doc.getElementsByClassName("eventFleet");
+    var alliance_attack_tags = doc.getElementsByClassName("allianceAttack");
+
+    var movement_tags = get_movement_tags(event_fleet_tags, alliance_attack_tags);
+
     var fleet_movements = get_fleet_movements(movement_tags);
     var fleets = get_fleets(event_fleet_tags);
 
@@ -241,15 +248,11 @@ function process_event_list(content)
     for (var i = 0; i < fleet_movements.length; ++i)
     {
         var fleet_movement = fleet_movements[i];
-        console.log(fleet_movement);
-
-        /*
-        if (!event.grouped && event.type.split("|")[0] == "Flotte ennemie")
+ 
+        if (fleet_movement.type.split("|")[0] == "Flotte ennemie" || fleet_movement.type == "Attaque groupée")
         {
-            send_to_webhook(event);
+            send_to_webhook(fleet_movement);
         }
-
-        */
     }
 }
 
@@ -274,27 +277,39 @@ function check_attack() {
 	setTimeout(check_attack, rand(4, 6) * 1000);
 }
 
-function send_to_webhook(event) {
-    createCookie('webhook_advert_' + event.id, time(), 1, 'all');	
+function send_to_webhook(fleet_movement) {
+    createCookie('webhook_advert_' + fleet_movement.id, time(), 1, 'all');	
 	var message = "|_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_|\n";
-    message += "Attaque en cours sur la [target_type] [target_name] [target_coordinates]\n";
-    message += "\tNom du défenseur : [target_username]\n";
+    message += "Attaque en cours sur [target_name] [target_coordinates] ([target_type])\n";
+    message += "\tDéfenseur : [target_username]\n";
     message += "\tHeure d'impact : [impact_date]\n";
-    message += "\tInformation attaquant:\n";
-    message += "\t\tAttaque depuis: [source_name] [source_coordinates]\n";
-    message += "\t\tNombres vaisseaux: [source_fleet]\n";
-    message += "\t\tListe vaisseaux: [source_fleet_details]\n";
+    message += "[fleets]";
     message += "|_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_|\n";
     
-    message = message.replace("[target_type]", event.target_type);
-    message = message.replace("[target_name]", event.target_name);
-    message = message.replace("[target_coordinates]", event.target_coordinates);
+    var fleet_prototype = "\t\tAttaquant : [source_name] de [source_coordinates] ([source_type])\n";
+    fleet_prototype += "\t\t\tVaisseaux ([size]) :\n";
+    fleet_prototype += "[details]\n";
+
+    var fleets = "";
+    for (var i = 0; i < fleet_movement.fleets.length; ++i)
+    {
+        var f = fleet_movement.fleets[i];
+        var p = fleet_prototype;
+        p = p.replace("[source_name]", f.source_name);
+        p = p.replace("[source_type]", f.source_type);
+        p = p.replace("[source_coordinates]", f.source_coordinates);
+        p = p.replace("[size]", f.size);
+        p = p.replace("[details]", f.details);
+
+        fleets += p;
+    }
+
+    message = message.replace("[target_type]", fleet_movement.target_type);
+    message = message.replace("[target_name]", fleet_movement.target_name);
+    message = message.replace("[target_coordinates]", fleet_movement.target_coordinates);
     message = message.replace("[target_username]", username);
-    message = message.replace("[impact_date]", event.time);
-    message = message.replace("[source_name]", event.source_name);
-    message = message.replace("[source_coordinates]", event.source_coordinates);
-    message = message.replace("[source_fleet]", event.fleet_size);
-    message = message.replace("[source_fleet_details]", event.fleet_details);
+    message = message.replace("[impact_date]", fleet_movement.time);
+    message = message.replace("[fleets]", fleets);
 
 	var params = JSON.stringify({ "username" : "I2T", "content" : message});
 
