@@ -17,7 +17,7 @@
 
 /* Configuration */
 var URL_WEBHOOK="";
-
+var freq_notif=10;
 
 /* Declarations */
 var univers = window.location.hostname;
@@ -248,8 +248,8 @@ function process_event_list(content)
     for (var i = 0; i < fleet_movements.length; ++i)
     {
         var fleet_movement = fleet_movements[i];
- 
-        if (fleet_movement.type.split("|")[0] == "Flotte ennemie" || fleet_movement.type == "Attaque groupée")
+
+        if ((fleet_movement.type.split("|")[0] == "Flotte ennemie" || fleet_movement.type == "Attaque groupée") && (readCookie('webhook_advert_' + fleet_movement.id, 'all') == null || time() >= parseInt(readCookie('webhook_advert_' + fleet_movement.id, 'all')) + freq_notif*60*1000 ))
         {
             send_to_webhook(fleet_movement);
         }
