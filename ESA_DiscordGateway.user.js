@@ -46,47 +46,210 @@ function eraseCookie(name, pref) {
     localStorage.removeItem(name);
 }
 
+function get_fleet_movement_id(movement_tag)
+{
+    if (movement_tag.hasAttribute("id"))
+    {
+        return movement_tag.id.split("-")[1];
+    }
+    else
+    {
+        for (var i = 0; i < movement_tag.classList.length; ++i)
+        {
+            var c = movement_tag.classList.item(i);
+            if (c.indexOf("union") == 0)
+            {
+                return c.replace("union", "");
+            }
+        }
+    }
+}
+
+function get_fleet_movement_time(movement_tag)
+{
+    var arrival_time_tag = movement_tag.getElementsByClassName("arrivalTime")[0];
+
+    return arrival_time_tag.textContent.trim();
+}
+
+function get_fleet_movement_type(movement_tag)
+{
+    var mission_fleet_tag = movement_tag.getElementsByClassName("missionFleet")[0];
+    var img_mission_fleet_tag = mission_fleet_tag.getElementsByTagName("img")[0];
+    
+    return img_mission_fleet_tag.getAttribute("title");
+}
+
+function get_fleet_movement_target_name(movement_tag)
+{
+    var dest_fleet_tag = movement_tag.getElementsByClassName("destFleet")[0];
+    
+    return dest_fleet_tag.textContent.trim();
+}
+
+function get_fleet_movement_target_type(movement_tag)
+{
+    var dest_fleet_tag = movement_tag.getElementsByClassName("destFleet")[0];
+    var figure_dest_fleet_tag = dest_fleet_tag.getElementsByTagName("figure")[0];
+
+    return figure_dest_fleet_tag.classList.item(1);
+}
+
+function get_fleet_movement_target_coordinates(movement_tag)
+{
+    var dest_coords_tag = movement_tag.getElementsByClassName("destCoords")[0];
+    
+    return dest_coords_tag.textContent.trim();
+}
+
+function is_movement_tag(movement_tag)
+{
+    return movement_tag.hasAttribute("id") || movement_tag.classList.contains("allianceAttack");
+}
+
+function is_fleet_tag(fleet_tag)
+{
+    return fleet_tag.hasAttribute("id") || fleet_tag.classList.contains("partnerInfo");
+}
+
+function get_fleet_movements(movement_tags)
+{
+    var fleet_movements = [];
+
+    for (var i = 0; i < movement_tags.length; ++i)
+    {
+        var movement_tag = movement_tags[i];
+
+        if (is_movement_tag(movement_tag))
+        {
+            var fleet_movement = {};
+            fleet_movement.fleets = [];
+            fleet_movement.id = get_fleet_movement_id(movement_tag);
+            fleet_movement.time = get_fleet_movement_time(movement_tag);
+            fleet_movement.type = get_fleet_movement_type(movement_tag);
+            fleet_movement.target_name = get_fleet_movement_target_name(movement_tag);
+            fleet_movement.target_type = get_fleet_movement_target_type(movement_tag);
+            fleet_movement.target_coordinates = get_fleet_movement_target_coordinates(movement_tag);
+
+            fleet_movements.push(fleet_movement);
+        }
+    }
+
+    return fleet_movements;
+}
+
+function get_fleet_source_name(fleet_tag)
+{
+    var origin_fleet_tag = fleet_tag.getElementsByClassName("originFleet")[0];
+    
+    return origin_fleet_tag.textContent.trim();
+}
+
+function get_fleet_source_type(fleet_tag)
+{
+    var origin_fleet_tag = fleet_tag.getElementsByClassName("originFleet")[0];
+    var figure_origin_fleet_tag = origin_fleet_tag.getElementsByTagName("figure")[0];
+    
+    return figure_origin_fleet_tag.classList.item(1);
+}
+
+function get_fleet_source_coordinates(fleet_tag)
+{
+    var coords_origin_tag = fleet_tag.getElementsByClassName("coordsOrigin")[0];
+    
+    return coords_origin_tag.textContent.trim();
+}
+
+function get_fleet_size(fleet_tag)
+{
+    var details_fleet_tag = fleet_tag.getElementsByClassName("detailsFleet")[0];
+    
+    return details_fleet_tag.textContent.trim();
+}
+
+function get_fleet_details(fleet_tag)
+{
+    /* TODO: parse fleet details */
+    return "";
+}
+
+function get_fleets(fleet_tags)
+{
+    var fleets = [];
+
+    for (var i = 0; i < fleet_tags.length; ++i)
+    {
+        var fleet_tag = fleet_tags[i];
+
+        if (is_fleet_tag(fleet_tag))
+        {
+            var fleet = {};
+            fleet.movement_id = get_fleet_movement_id(fleet_tag);
+            fleet.source_name = get_fleet_source_name(fleet_tag);
+            fleet.source_type = get_fleet_source_type(fleet_tag);
+            fleet.source_coordinates = get_fleet_source_coordinates(fleet_tag);
+            fleet.size = get_fleet_size(fleet_tag);
+            fleet.details = get_fleet_details(fleet_tag);
+
+            fleets.push(fleet);
+        }
+    }
+
+    return fleets;
+}
+
+function merge_fleets_with_fleet_movements(fleet_movements, fleets)
+{
+    for (var i = 0; i < fleets.length; ++i)
+    {
+        for (var j = 0; j < fleet_movements.length; ++j)
+        {
+            if (fleets[i].movement_id == fleet_movements[j].id)
+            {
+                fleet_movements[j].fleets.push(fleets[i]);
+                break;
+            }
+        }
+    }
+}
+
 function process_event_list(content)
 {
     var p = new DOMParser();
     var doc = p.parseFromString(content, "text/html");
 
     var event_fleet_tags = doc.getElementsByClassName("eventFleet");
+    var alliance_attack_tags = doc.getElementsByClassName("allianceAttack");
+
+    var movement_tags = [];
 
     for (var i = 0; i < event_fleet_tags.length; ++i)
     {
-        var event_fleet_tag = event_fleet_tags[i];
+        movement_tags.push(event_fleet_tags[i]);
+    }
 
-        var mission_fleet_tag = event_fleet_tag.getElementsByClassName("missionFleet")[0];
-        var arrival_time_tag = event_fleet_tag.getElementsByClassName("arrivalTime")[0];
-        var origin_fleet_tag = event_fleet_tag.getElementsByClassName("originFleet")[0];
-        var coords_origin_tag = event_fleet_tag.getElementsByClassName("coordsOrigin")[0];
-        var details_fleet_tag = event_fleet_tag.getElementsByClassName("detailsFleet")[0];
-        var icon_movement_tag = event_fleet_tag.getElementsByClassName("icon_movement")[0];
-        var dest_fleet_tag = event_fleet_tag.getElementsByClassName("destFleet")[0];
-        var dest_coords_tag = event_fleet_tag.getElementsByClassName("destCoords")[0];
-        
-        var img_mission_fleet_tag = mission_fleet_tag.getElementsByTagName("img")[0];
-        var figure_origin_fleet_tag = origin_fleet_tag.getElementsByTagName("figure")[0];
-        var figure_dest_fleet_tag = dest_fleet_tag.getElementsByTagName("figure")[0];
+    for (var i = 0; i < alliance_attack_tags.length; ++i)
+    {
+        movement_tags.push(alliance_attack_tags[i]);
+    }
 
-        var event = {};
-        event.id = event_fleet_tag.id.split("-")[1];
-        event.time = arrival_time_tag.textContent.trim();
-        event.type = img_mission_fleet_tag.getAttribute("title");
-        event.source_name = origin_fleet_tag.textContent.trim();
-        event.source_type = figure_origin_fleet_tag.classList.item(1);
-        event.source_coordinates = coords_origin_tag.textContent.trim();
-        event.fleet_size = details_fleet_tag.textContent.trim();
-        event.fleet_details = ""; /* TODO : parse and beautify fleet details */
-        event.target_name = dest_fleet_tag.textContent.trim();
-        event.target_type = figure_dest_fleet_tag.classList.item(1);
-        event.target_coordinates = dest_coords_tag.textContent.trim();
+    var fleet_movements = get_fleet_movements(movement_tags);
+    var fleets = get_fleets(event_fleet_tags);
 
-        if (event.type.split("|")[0] == "Flotte ennemie")
+    merge_fleets_with_fleet_movements(fleet_movements, fleets);
+
+    for (var i = 0; i < fleet_movements.length; ++i)
+    {
+        var fleet_movement = fleet_movements[i];
+        console.log(fleet_movement);
+
+        /*
+        if (!event.grouped && event.type.split("|")[0] == "Flotte ennemie")
         {
             send_to_webhook(event);
         }
+
+        */
     }
 }
 
@@ -107,6 +270,7 @@ function check_attack() {
         xhr.open("GET", "https://" + univers + "/game/index.php?page=eventList");
         xhr.send();
     }
+    
 	setTimeout(check_attack, rand(4, 6) * 1000);
 }
 
