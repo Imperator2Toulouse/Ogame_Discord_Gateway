@@ -18,6 +18,7 @@
 /* Configuration */
 var URL_WEBHOOK="";
 
+
 /* Declarations */
 var univers = window.location.hostname;
 var username;
@@ -169,8 +170,7 @@ function get_fleet_size(fleet_tag)
 
 function get_fleet_details(fleet_tag)
 {
-    /* TODO: parse fleet details */
-    return "";
+    return ($(fleet_tag).find("td.icon_movement span").length>0)?$($(fleet_tag).find("td.icon_movement span").attr('title')).find(".fleetinfo").html().replace(/<th.*>.*<\/th>/, '').replace(/(<(?:.|\n)*?>)/gm, ' ').replace(/\s+/gm, ' ').trim():"Aucun vaisseaux";
 }
 
 function get_fleets(fleet_tags)
