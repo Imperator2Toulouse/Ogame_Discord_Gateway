@@ -17,7 +17,7 @@
 
 /* Configuration */
 var URL_WEBHOOK="";
-var freq_notif=10;
+var FREQ_NOTIF=10;
 
 /* Declarations */
 var univers = window.location.hostname;
@@ -170,7 +170,40 @@ function get_fleet_size(fleet_tag)
 
 function get_fleet_details(fleet_tag)
 {
-    return ($(fleet_tag).find("td.icon_movement span").length>0)?$($(fleet_tag).find("td.icon_movement span").attr('title')).find(".fleetinfo").html().replace(/<th.*>.*<\/th>/, '').replace(/(<(?:.|\n)*?>)/gm, ' ').replace(/\s+/gm, ' ').trim():"Aucun vaisseaux";
+    var details = [];
+
+    var span_icon_movement_tags = $(fleet_tag).find("td.icon_movement span");
+    if (span_icon_movement_tags.length == 0)
+        span_icon_movement_tags = $(fleet_tag).find("td.icon_movement_reserve span");
+
+    var row_tags = $(span_icon_movement_tags.attr('title')).find(".fleetinfo tr");
+
+    var category = "";
+    for (var i = 0; i < row_tags.length; ++i)
+    {
+        var td_tags = row_tags[i].getElementsByTagName("td");
+        var th_tags = row_tags[i].getElementsByTagName("th");
+
+        if (th_tags.length >= 1)
+        {
+            category = th_tags[0].textContent.trim().replace(":", "");
+        }
+
+        if (td_tags.length >= 2)
+        {
+            var type = $(td_tags[0]).text().trim().replace(":", "");
+            var count = $(td_tags[1]).text().trim();
+
+            var d = {};
+            d.category = category;
+            d.type = type;
+            d.count = count;
+            
+            details.push(d);
+        }
+    }
+
+    return details;
 }
 
 function get_fleets(fleet_tags)
@@ -249,7 +282,9 @@ function process_event_list(content)
     {
         var fleet_movement = fleet_movements[i];
 
-        if ((fleet_movement.type.split("|")[0] == "Flotte ennemie" || fleet_movement.type == "Attaque groupée") && (readCookie('webhook_advert_' + fleet_movement.id, 'all') == null || time() >= parseInt(readCookie('webhook_advert_' + fleet_movement.id, 'all')) + freq_notif*60*1000 ))
+        if ((fleet_movement.type.split("|")[0] == "Flotte ennemie" || fleet_movement.type == "Attaque groupée")
+            && (readCookie('webhook_advert_' + fleet_movement.id, 'all') == null
+                || time() >= parseInt(readCookie('webhook_advert_' + fleet_movement.id, 'all')) + FREQ_NOTIF * 60 * 1000))
         {
             send_to_webhook(fleet_movement);
         }
@@ -288,7 +323,7 @@ function send_to_webhook(fleet_movement) {
     
     var fleet_prototype = "\t\tAttaquant : [source_name] de [source_coordinates] ([source_type])\n";
     fleet_prototype += "\t\t\tVaisseaux ([size]) :\n";
-    fleet_prototype += "\t\t\t[details]\n";
+    fleet_prototype += "[details]";
 
     var fleets = "";
     for (var i = 0; i < fleet_movement.fleets.length; ++i)
@@ -299,7 +334,22 @@ function send_to_webhook(fleet_movement) {
         p = p.replace("[source_type]", f.source_type);
         p = p.replace("[source_coordinates]", f.source_coordinates);
         p = p.replace("[size]", f.size);
-        p = p.replace("[details]", f.details);
+
+        var details = "";
+        for (var j = 0; j < f.details.length; ++j)
+        {
+            var d = f.details[j];
+            if (d.category == "Chargement")
+            {
+                details += "\t\t\t\t" + d.type + " : " + d.count + "\n";
+            }
+            else
+            {
+                details += "\t\t\t" + d.type + " : " + d.count + "\n";
+            }
+        }
+
+        p = p.replace("[details]", details);
 
         fleets += p;
     }
