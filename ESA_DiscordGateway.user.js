@@ -281,9 +281,9 @@ function process_event_list(content)
     for (var i = 0; i < fleet_movements.length; ++i)
     {
         var fleet_movement = fleet_movements[i];
-
+		//debugger;
         if ((fleet_movement.type.split("|")[0] == "Flotte ennemie" || fleet_movement.type == "Attaque groupée")
-            && (readCookie('webhook_advert_' + fleet_movement.id, 'all') == null
+            && fleet_movement.type.split("|")[1] != "Espionner" && (readCookie('webhook_advert_' + fleet_movement.id, 'all') == null
                 || time() >= parseInt(readCookie('webhook_advert_' + fleet_movement.id, 'all')) + FREQ_NOTIF * 60 * 1000))
         {
             send_to_webhook(fleet_movement);
